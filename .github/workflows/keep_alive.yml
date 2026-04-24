@@ -1,17 +1,24 @@
-name: n8n Keep Alive
+name: n8n Keep Alive Pro
 
 on:
   schedule:
-    # 这里的 cron 表达式代表每小时执行一次（第 0 分钟触发）
+    # 每小时的第 0 分钟执行
     - cron: '0 * * * *'
-  workflow_dispatch: # 允许你手动点击运行测试
+  workflow_dispatch: # 保持手动触发功能
 
 jobs:
-  ping:
+  ping_space:
     runs-on: ubuntu-latest
     steps:
-      - name: Wake up n8n on Hugging Face
+      - name: Wake Up Space
         run: |
-          # 请将下方的链接替换为你真实的 n8n 访问地址
-          curl -s https://xiu-xing-n8n-free.hf.space > /dev/null
-          echo "Wake up call sent at $(date)"
+          # 1. 访问 API 接口 (唤醒管理层)
+          curl -s -X GET "https://huggingface.co/api/spaces/xiu-xing/n8n-free" \
+            -H "Authorization: Bearer ${{ secrets.HF_TOKEN }}" > /dev/null
+
+          # 2. 访问 App 地址 (直接进入容器内部)
+          # -L 是关键，用于追踪私有空间的重定向
+          curl -s -L -H "Authorization: Bearer ${{ secrets.HF_TOKEN }}" \
+            https://xiu-xing-n8n-free.hf.space > /dev/null
+
+          echo "All signals sent successfully at $(date)"
