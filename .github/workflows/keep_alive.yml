@@ -2,23 +2,36 @@ name: n8n Keep Alive Pro
 
 on:
   schedule:
-    # 每小时的第 0 分钟执行
     - cron: '0 * * * *'
-  workflow_dispatch: # 保持手动触发功能
+  workflow_dispatch:
 
 jobs:
-  ping_space:
+  ping_spaces:
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - space_path: "xiu-xing/n8n-free"
+            subdomain: "xiu-xing-n8n-free"
+            token_name: "HF_TOKEN"     # 指定使用第一个 Token
+          - space_path: "Houaxing/n8n-free"
+            subdomain: "houaxing-n8n-free"
+            token_name: "HF_TOKEN_1"   # 指定使用第二个 Token
+
     steps:
-      - name: Wake Up Space
+      - name: Wake Up Space (${{ matrix.space_path }})
+        env:
+          # 这一步是关键：根据 matrix 定义的名字，动态获取对应的 Secret
+          # 逻辑是：如果 token_name 是 HF_TOKEN 就用 secrets.HF_TOKEN，否则用 secrets.HF_TOKEN_1
+          CURRENT_TOKEN: ${{ matrix.token_name == 'HF_TOKEN' && secrets.HF_TOKEN || secrets.HF_TOKEN_1 }}
         run: |
-          # 1. 访问 API 接口 (唤醒管理层)
-          curl -s -X GET "https://huggingface.co/api/spaces/xiu-xing/n8n-free" \
-            -H "Authorization: Bearer ${{ secrets.HF_TOKEN }}" > /dev/null
+          # 1. 访问 API 接口
+          curl -s -X GET "https://huggingface.co/api/spaces/${{ matrix.space_path }}" \
+            -H "Authorization: Bearer $CURRENT_TOKEN" > /dev/null
 
-          # 2. 访问 App 地址 (直接进入容器内部)
-          # -L 是关键，用于追踪私有空间的重定向
-          curl -s -L -H "Authorization: Bearer ${{ secrets.HF_TOKEN }}" \
-            https://xiu-xing-n8n-free.hf.space > /dev/null
+          # 2. 访问 App 地址
+          curl -s -L -H "Authorization: Bearer $CURRENT_TOKEN" \
+            "https://${{ matrix.subdomain }}.hf.space" > /dev/null
 
-          echo "All signals sent successfully at $(date)"
+          echo "Signal sent to ${{ matrix.space_path }} using ${{ matrix.token_name }} at $(date)"
