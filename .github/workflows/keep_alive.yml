@@ -12,7 +12,7 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - space_path: "Xiu-xing/Chatwoot"
+          - space_path: "Xiu-xing/chatwoot"
             subdomain: "xiu-xing-chatwoot"
             token_name: "HF_TOKEN"     # 指定使用第一个 Token
           - space_path: "Houaxing/n8n-free"
